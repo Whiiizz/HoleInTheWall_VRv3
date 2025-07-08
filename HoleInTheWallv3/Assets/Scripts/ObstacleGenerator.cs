@@ -10,8 +10,8 @@ public class ObstacleGenerator : MonoBehaviour
     private float wall_width = 3f;                                                  // the set size of the wall's width
     private float leftover_height;                                                  // the remaining wall height required to make the set wall
     private float leftover_width;                                                   // the remaining wall width required to make the set wall
-    private int wall_col = 10;                                                      // the amount of columns for the matrix
-    private int wall_row = 9;                                                       // the amount of rows for the matrix
+    public int wall_col = 10;                                                      // the amount of columns for the matrix
+    public int wall_row = 9;                                                       // the amount of rows for the matrix
     public float block_height = 0.25f;                                              // the block height size
     public float block_width = 0.3f;                                                // the block width size
     public float block_depth = 0.2f;                                                // the block thickness size
@@ -20,9 +20,9 @@ public class ObstacleGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        int[,] test_wall =  {   {1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-                                {1, 0, 1, 1, 0, 1, 1, 1, 1, 1},
-                                {0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+        int[,] test_wall =  {   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+                                {1, 1, 1, 1, 0, 1, 1, 1, 1, 1},
+                                {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
                                 {0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
                                 {0, 1, 0, 1, 1, 1, 1, 1, 1, 1},
                                 {0, 1, 0, 1, 1, 1, 1, 1, 1, 1},
@@ -31,7 +31,7 @@ public class ObstacleGenerator : MonoBehaviour
                                 {0, 1, 0, 1, 1, 1, 1, 1, 1, 1}
                             };
 
-        build_wall(test_wall);
+        Build_wall(test_wall);
     }
 
     // Update is called once per frame
@@ -40,35 +40,8 @@ public class ObstacleGenerator : MonoBehaviour
 
     }
 
-    public void set_dim()
+    public void Set_dim()
     {
-        //check if the given size is within the set size of the total wall
-        if (block_height > wall_height)
-        {
-            wall_row = 1;
-            leftover_height = 0f;
-
-            if (block_width > wall_width)
-            {
-                wall_col = 1;
-                leftover_width = 0f;
-            }
-
-            return;
-        }
-        if (block_width > wall_width)
-        {
-            wall_col = 1;
-            leftover_width = 0f;
-
-            if (block_height > wall_height)
-            {
-                wall_row = 1;
-                leftover_height = 0f;
-            }
-            return;
-        }
-
         //find the amount of rows and columns
         wall_row = (int)Math.Floor(wall_height / block_height);
         wall_col = (int)Math.Floor(wall_width / block_width);
@@ -80,12 +53,30 @@ public class ObstacleGenerator : MonoBehaviour
         //increment the row and col if there are leftover heights
         if (leftover_height != 0) wall_row++;
         if (leftover_width != 0) wall_col++;
+        //check if the given size is within the set size of the total wall
+        if ((block_height > wall_height) || (block_width > wall_width))
+        {
+            //set the dimensions if over the size
+            if (block_height > wall_height)
+            {
+                wall_row = 1;
+                block_height = wall_height;
+                leftover_height = 0f;
+            }
+
+            if (block_width > wall_width)
+            {
+                wall_col = 1;
+                block_width = wall_width;
+                leftover_width = 0f;
+            }
+        }
 
         wall = new int[wall_row, wall_col];
     }
 
     //build set dimension wall according to size of cubes
-    public void build_wall(int[,] given_wall)
+    public void Build_wall(int[,] given_wall)
     {
         //destroy all children first
         foreach (Transform child in transform)
@@ -94,8 +85,8 @@ public class ObstacleGenerator : MonoBehaviour
         }
 
         //set the dimension
-        set_dim();
-        set_wall_matrix(given_wall);
+        Set_dim();
+        Set_wall_matrix(given_wall);
 
         //make sure the wall is above the ground
         float ground_offset = block_height / 2;
@@ -184,17 +175,17 @@ public class ObstacleGenerator : MonoBehaviour
     //     }
     // }
 
-    public void set_wall(int row, int col)
+    public void Set_wall(int row, int col)
     {
         if (row < wall_row && col < wall_col) wall[row, col] = 1;
     }
 
-    public void set_hole(int row, int col)
+    public void Set_hole(int row, int col)
     {
         if (row < wall_row && col < wall_col) wall[row, col] = 0;
     }
 
-    public void set_wall_matrix(int[,] given_wall)
+    public void Set_wall_matrix(int[,] given_wall)
     {
         //the limits of the given wall
         int copied_row_limit = given_wall.GetLength(0);
@@ -211,12 +202,12 @@ public class ObstacleGenerator : MonoBehaviour
             }
         }
     }
-    public int get_col()
+    public int Get_col()
     {
         return wall_col;
     }
 
-    public int get_row()
+    public int Get_row()
     {
         return wall_row;
     }
