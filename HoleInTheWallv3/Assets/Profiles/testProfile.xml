@@ -2,14 +2,8 @@
 <ProfileDataCollection xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Profiles>
     <Profile>
-      <achievements>
-        <string>test ach 1</string>
-        <string>test ach 2</string>
-        <string>test ach 3</string>
-        <string>First Game</string>
-        <string>Perfect Pass</string>
-      </achievements>
-      <highScore>97</highScore>
+      <achievements />
+      <highScore>0</highScore>
       <topStreak>4</topStreak>
     </Profile>
     <Profile>
