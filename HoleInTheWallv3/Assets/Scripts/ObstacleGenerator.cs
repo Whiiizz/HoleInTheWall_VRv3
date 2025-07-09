@@ -10,8 +10,8 @@ public class ObstacleGenerator : MonoBehaviour
     private float wall_width = 3f;                                                  // the set size of the wall's width
     private float leftover_height;                                                  // the remaining wall height required to make the set wall
     private float leftover_width;                                                   // the remaining wall width required to make the set wall
-    public int wall_col = 10;                                                      // the amount of columns for the matrix
-    public int wall_row = 9;                                                       // the amount of rows for the matrix
+    private int wall_col = 10;                                                      // the amount of columns for the matrix
+    private int wall_row = 9;                                                       // the amount of rows for the matrix
     public float block_height = 0.25f;                                              // the block height size
     public float block_width = 0.3f;                                                // the block width size
     public float block_depth = 0.2f;                                                // the block thickness size

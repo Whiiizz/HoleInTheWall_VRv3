@@ -2050,3 +2050,101 @@ Score: 83
 <Right Controller> - position: -0.7971468, 0.6741333, 0.3027102 rotation: 79.91315, 153.7286, 80.41322, 
 Score: 93
 
+7/8/2025
+7/8/2025
+2
+8:23:51 PM
+Score: 10
+
+2
+8:23:52 PM
+Score: 14
+
+2
+8:23:53 PM
+Score: 18
+
+2
+8:23:54 PM
+Score: 22
+
+2
+8:23:55 PM
+Score: 26
+
+2
+8:23:56 PM
+Score: 30
+
+2
+8:23:57 PM
+Score: 34
+
+2
+8:23:58 PM
+Score: 38
+
+2
+8:23:59 PM
+Score: 43
+
+2
+8:24:01 PM
+Score: 47
+
+2
+8:24:02 PM
+Score: 51
+
+2
+8:24:03 PM
+Score: 55
+
+2
+8:24:04 PM
+Score: 59
+
+2
+8:24:05 PM
+Score: 64
+
+7/8/2025
+7/8/2025
+7/8/2025
+7/8/2025
+7/8/2025
+7/8/2025
+3
+9:07:19 PM
+<Main Camera> - position: -0.03365988, 16.49727, 0.7607012 rotation: 80.00003, 44.99994, -9.833368E-06, 
+Score: 10
+
+5
+9:07:20 PM
+<Left Controller> - position: 0.1077614, 16.44727, 1.043544 rotation: 0, 44.99998, 0, 
+<Right Controller> - position: 0.2491829, 16.44727, 0.9021225 rotation: 0, 45.00002, 0, 
+<Main Camera> - position: -0.03365988, 16.49727, 0.7607012 rotation: 80.00003, 44.99994, -9.833368E-06, 
+Score: 14
+
+5
+9:07:21 PM
+<Left Controller> - position: 0.1077614, 16.44727, 1.043544 rotation: 0, 44.99998, 0, 
+<Right Controller> - position: 0.2491829, 16.44727, 0.9021225 rotation: 0, 45.00002, 0, 
+<Main Camera> - position: -0.03365988, 16.49727, 0.7607012 rotation: 80.00003, 44.99994, -9.833368E-06, 
+Score: 18
+
+5
+9:07:22 PM
+<Left Controller> - position: 0.1077614, 16.44727, 1.043544 rotation: 0, 44.99998, 0, 
+<Right Controller> - position: 0.2491829, 16.44727, 0.9021225 rotation: 0, 45.00002, 0, 
+<Main Camera> - position: -0.03365988, 16.49727, 0.7607012 rotation: 80.00003, 44.99994, -9.833368E-06, 
+Score: 22
+
+5
+9:07:23 PM
+<Left Controller> - position: 0.1077614, 16.44727, 1.043544 rotation: 0, 44.99998, 0, 
+<Right Controller> - position: 0.2491829, 16.44727, 0.9021225 rotation: 0, 45.00002, 0, 
+<Main Camera> - position: -0.03365988, 16.49727, 0.7607012 rotation: 80.00003, 44.99994, -9.833368E-06, 
+Score: 26
+
+7/8/2025
