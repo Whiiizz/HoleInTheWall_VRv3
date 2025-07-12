@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class ObstacleGenerator : MonoBehaviour
@@ -16,6 +17,9 @@ public class ObstacleGenerator : MonoBehaviour
     public float block_width = 0.3f;                                                // the block width size
     public float block_depth = 0.2f;                                                // the block thickness size
     public int[,] wall;                                                             // matrix representing the wall with holes. 0 = hole, 1 = wall
+
+    //second way to generate the wall
+    public int custom_cube_amt = 5;
 
     // Start is called before the first frame update
     void Start()
@@ -32,6 +36,15 @@ public class ObstacleGenerator : MonoBehaviour
                             };
 
         Build_wall(test_wall);
+
+        // float[,] block_param = {    {.25f, 0, 0, .25f, .5f},
+        //                             {0, .5f, 0, .25f, .5f},
+        //                             {0, 0, 0, .25f, .5f},
+        //                             {.5f, .5f, 0, .25f, .5f},
+        //                             {.5f, .25f, 0, .25f, 1f}
+        //                         };
+
+        // custom_build(block_param);
     }
 
     // Update is called once per frame
@@ -210,5 +223,32 @@ public class ObstacleGenerator : MonoBehaviour
     public int Get_row()
     {
         return wall_row;
+    }
+
+    //second way to build wall
+    public void custom_build(float[,] cube_parameters)
+    {
+        //check if the array has the correct amount of parameters for each of the cubes
+        if (cube_parameters.GetLength(0) != custom_cube_amt || cube_parameters.GetLength(1) != 5) return;
+
+        for (int i = 0; i < custom_cube_amt; i++)
+        {
+            //create the wall based off the items in the array
+            custom_build_wall(cube_parameters[i, 0], cube_parameters[i, 1], cube_parameters[i, 2], cube_parameters[i, 3], cube_parameters[i, 4]);
+        }
+    }
+
+    public void custom_build_wall(float x_axis, float y_axis, float z_axis, float custom_width, float custom_height)
+    {
+        GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        //create the block with right size
+        cube.transform.localScale = new Vector3(custom_width, custom_height, block_depth);
+        // set parent to this GameObject
+        cube.transform.SetParent(transform);
+
+        // apply local offset relative to this transform
+        Vector3 localOffset = new(x_axis, y_axis, z_axis);
+        cube.transform.position = transform.TransformPoint(localOffset);
     }
 }
