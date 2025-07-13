@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Filtering;
 
@@ -12,6 +13,7 @@ public class AvatarController : MonoBehaviour
     [SerializeField] private Transform left_hand_forearm;
     [SerializeField] private SphereCollider right_arm_span;
     [SerializeField] private SphereCollider left_arm_span;
+    [SerializeField] private BoxCollider movement_boundary;
 
     // variables to track if given position or rotation exceeds avatar movement (to reduce sparsity)
     public bool has_over_moved = false;
@@ -62,8 +64,8 @@ public class AvatarController : MonoBehaviour
         }
 
 
-        Vector3 r_current_rotation = right_hand_target.transform.eulerAngles;
-        Vector3 l_current_rotation = left_hand_target.transform.eulerAngles;
+        UnityEngine.Vector3 r_current_rotation = right_hand_target.transform.eulerAngles;
+        UnityEngine.Vector3 l_current_rotation = left_hand_target.transform.eulerAngles;
 
         //ASSUMING T POSE
         if (is_right_hand)
@@ -97,22 +99,22 @@ public class AvatarController : MonoBehaviour
 
         //calculate the center
         Transform center_transform = arm_span.transform;
-        Vector3 center = center_transform.TransformPoint(arm_span.center);
+        UnityEngine.Vector3 center = center_transform.TransformPoint(arm_span.center);
 
         //move the hand based on local values; transformation based off the parents
-        Vector3 target_position = new(x_pos, y_pos, z_pos);
+        UnityEngine.Vector3 target_position = new(x_pos, y_pos, z_pos);
         target.localPosition = target_position;
 
         //check if within radius
         float radius = arm_span.radius * center_transform.lossyScale.x;
 
         //check if target is within the limitation sphere
-        Vector3 offset = target.position - center;
+        UnityEngine.Vector3 offset = target.position - center;
 
         if (offset.magnitude > radius)
         {
             //clamp position to surface of sphere
-            Vector3 revised_position = center + offset.normalized * radius;
+            UnityEngine.Vector3 revised_position = center + offset.normalized * radius;
             target.localPosition = target.parent.InverseTransformPoint(revised_position);
             has_over_moved = true;
         }
@@ -120,4 +122,13 @@ public class AvatarController : MonoBehaviour
         return (target.localPosition.x, target.localPosition.y, target.localPosition.z);
     }
 
+    //no y_pos because we assume avatar can't jump/fly
+    public (float, float) Move_body(float x_pos, float z_pos)
+    {
+        transform.position = new(transform.position.x + x_pos, transform.position.y, transform.position.z + z_pos);
+        //have a boundary of the movement
+
+
+        return (x_pos, z_pos);
+    }
 }
