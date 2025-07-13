@@ -13,7 +13,6 @@ public class AvatarController : MonoBehaviour
     [SerializeField] private SphereCollider right_arm_span;
     [SerializeField] private SphereCollider left_arm_span;
 
-    public float move_spd = 1f;
     // variables to track if given position or rotation exceeds avatar movement (to reduce sparsity)
     public bool has_over_moved = false;
     public bool has_over_rotated = false;
@@ -26,7 +25,7 @@ public class AvatarController : MonoBehaviour
             Debug.Log("Please drag the right/left hand targets to AvatarController script");
 
         //Rotate_hand(100, 100, 350, true);
-        // Move_hand(100, 20, 10, true);
+        //Move_hand(10, 10, 10, true);
     }
 
     // Update is called once per frame
@@ -87,33 +86,38 @@ public class AvatarController : MonoBehaviour
         return (x_angle, y_angle, z_angle);
     }
 
+    //move hand from T-pose to the local position of the given transform
     public (float, float, float) Move_hand(float x_pos, float y_pos, float z_pos, bool is_right_hand)
     {
         has_over_moved = false;
 
         //find which one is the arm span limitation
         SphereCollider arm_span = is_right_hand ? right_arm_span : left_arm_span;
-        //CapsuleCollider forbidden_zone = is_right_hand ? right_forbidden_zone : left_forbidden_zone;
         Transform target = is_right_hand ? right_hand_target : left_hand_target;
 
         //calculate the center
         Transform center_transform = arm_span.transform;
-        Vector3 center = center_transform.position + arm_span.center;
+        Vector3 center = center_transform.TransformPoint(arm_span.center);
 
-        //get the radius of the arm limit
+        //move the hand based on local values; transformation based off the parents
+        Vector3 target_position = new(x_pos, y_pos, z_pos);
+        target.localPosition = target_position;
+
+        //check if within radius
         float radius = arm_span.radius * center_transform.lossyScale.x;
 
+        //check if target is within the limitation sphere
         Vector3 offset = target.position - center;
 
-        //check if outside the sphere
         if (offset.magnitude > radius)
         {
             //clamp position to surface of sphere
-            target.position = center + offset.normalized * radius;
+            Vector3 revised_position = center + offset.normalized * radius;
+            target.localPosition = target.parent.InverseTransformPoint(revised_position);
             has_over_moved = true;
         }
 
-        return (target.position.x, target.position.y, target.position.z);
+        return (target.localPosition.x, target.localPosition.y, target.localPosition.z);
     }
 
 }

@@ -1259,7 +1259,6 @@ GameObject:
   - component: {fileID: 190832006}
   - component: {fileID: 190832005}
   - component: {fileID: 190832004}
-  - component: {fileID: 190832007}
   m_Layer: 0
   m_Name: Left Hand Motion Range
   m_TagString: Untagged
@@ -1353,20 +1352,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 190832002}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &190832007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 190832002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7f407d8e45a9d046b1378d484dd1438, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hand_target: {fileID: 919871329}
-  ai_script: {fileID: 2266981193217096425}
 --- !u!1001 &195468074
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3439,6 +3424,7 @@ MonoBehaviour:
   block_height: 0.25
   block_width: 0.3
   block_depth: 0.2
+  custom_cube_amt: 5
 --- !u!65 &874627841
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5172,7 +5158,6 @@ GameObject:
   - component: {fileID: 1197399830}
   - component: {fileID: 1197399829}
   - component: {fileID: 1197399828}
-  - component: {fileID: 1197399831}
   m_Layer: 0
   m_Name: Right Hand Motion Range
   m_TagString: Untagged
@@ -5266,20 +5251,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1197399826}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1197399831
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1197399826}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7f407d8e45a9d046b1378d484dd1438, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hand_target: {fileID: 885252691}
-  ai_script: {fileID: 2266981193217096425}
 --- !u!1 &1215668571
 GameObject:
   m_ObjectHideFlags: 0
@@ -6322,6 +6293,7 @@ MonoBehaviour:
   block_height: 0.25
   block_width: 0.3
   block_depth: 0.2
+  custom_cube_amt: 5
 --- !u!65 &1610121174
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7727,10 +7699,9 @@ MonoBehaviour:
   right_hand_forearm: {fileID: 3469979922378748433}
   left_hand_target: {fileID: 919871330}
   left_hand_forearm: {fileID: 8458823160616008000}
+  right_arm_span: {fileID: 1197399828}
+  left_arm_span: {fileID: 190832004}
   move_spd: 1
-  rotate_spd: 180
-  ik_tolerance: 0.02
-  ik_stall_tolerance: 0.001
   has_over_moved: 0
   has_over_rotated: 0
 --- !u!54 &2266981193217096426
