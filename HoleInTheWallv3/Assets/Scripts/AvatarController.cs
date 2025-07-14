@@ -1,9 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Numerics;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Filtering;
+
 
 public class AvatarController : MonoBehaviour
 {
@@ -23,11 +20,14 @@ public class AvatarController : MonoBehaviour
     void Start()
     {
         //check for serialized fields
-        if (right_hand_target == null || left_hand_target == null || right_hand_forearm == null || left_hand_forearm == null)
-            Debug.Log("Please drag the right/left hand targets to AvatarController script");
+        if (right_hand_target == null || left_hand_target == null || right_hand_forearm == null || left_hand_forearm == null || left_arm_span == null || right_arm_span == null)
+            Debug.Log("Please drag the right/left hand targets/forearm and limits to AvatarController script");
+        if (movement_boundary == null)
+            Debug.Log("Please drag the movement boundary to AvatarController script");
 
         //Rotate_hand(100, 100, 350, true);
         //Move_hand(10, 10, 10, true);
+        //Move_body(.2f, .2f);
     }
 
     // Update is called once per frame
@@ -125,10 +125,55 @@ public class AvatarController : MonoBehaviour
     //no y_pos because we assume avatar can't jump/fly
     public (float, float) Move_body(float x_pos, float z_pos)
     {
-        transform.position = new(transform.position.x + x_pos, transform.position.y, transform.position.z + z_pos);
-        //have a boundary of the movement
+        has_over_moved = false;
 
+        //store the original transformation
+        UnityEngine.Vector3 start_pos = transform.position;
 
-        return (x_pos, z_pos);
+        //boundary of the movement in world space rather than local
+        UnityEngine.Vector3 boundary_scaled = UnityEngine.Vector3.Scale(movement_boundary.size, movement_boundary.transform.lossyScale);
+        UnityEngine.Vector3 half_size = boundary_scaled * .5f;
+        UnityEngine.Vector3 center = movement_boundary.transform.TransformPoint(movement_boundary.center);
+
+        UnityEngine.Vector3 min = center - half_size;
+        UnityEngine.Vector3 max = center + half_size;
+
+        //track the amount of change
+        float x_movement = x_pos;
+        float z_movement = z_pos;
+
+        //predict the final destination
+        float final_x = transform.position.x + x_pos;
+        float final_z = transform.position.z + z_pos;
+
+        //check if the predicted transformation is within bounds. if not, snap to max or min position
+        if (final_x > max.x)
+        {
+            final_x = max.x;
+            x_movement = final_x - start_pos.x;
+        }
+        else if (final_x < min.x)
+        {
+            final_x = min.x;
+            x_movement = final_x - start_pos.x;
+        }
+
+        if (final_z > max.z)
+        {
+            final_z = max.z;
+            z_movement = final_z - start_pos.z;
+        }
+        else if (final_z < min.z)
+        {
+            final_z = min.z;
+            z_movement = final_z- start_pos.z;
+        }
+
+        if (x_movement != x_pos || z_movement != z_pos) has_over_moved = true;
+
+        //move avatar
+        transform.position = new(final_x, transform.position.y, final_z);
+
+        return (x_movement, z_movement);
     }
 }
