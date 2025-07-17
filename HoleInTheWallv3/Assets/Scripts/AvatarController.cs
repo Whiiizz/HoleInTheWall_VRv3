@@ -1,5 +1,8 @@
 using System;
+using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 public class AvatarController : MonoBehaviour
@@ -16,6 +19,15 @@ public class AvatarController : MonoBehaviour
     public bool has_over_moved = false;
     public bool has_over_rotated = false;
 
+    //file to read from
+    readonly string controller_path = Application.dataPath + "/Scripts/Reinforcement_Learning";
+    string rotate_hand_file;
+    string move_body_file;
+    string move_hand_file;
+
+    //file to output towards
+    string body_position_file;
+
     // Start is called before the first frame update    
     void Start()
     {
@@ -25,9 +37,16 @@ public class AvatarController : MonoBehaviour
         if (movement_boundary == null)
             Debug.Log("Please drag the movement boundary to AvatarController script");
 
+        //initialize the file names
+        rotate_hand_file = controller_path + "/rotate_hand.csv";
+        move_body_file = controller_path + "/move_body.csv";
+        move_hand_file = controller_path + "/move_hand.csv";
+        body_position_file = controller_path + "/body_position.csv";
+
         //Rotate_hand(100, 100, 350, true);
         //Move_hand(10, 10, 10, true);
         //Move_body(.2f, .2f);
+        Read_movement_file(10);
     }
 
     // Update is called once per frame
@@ -36,6 +55,130 @@ public class AvatarController : MonoBehaviour
 
     }
 
+    public void Read_movement_file(int wall_id)
+    {
+        string position_record;
+
+        //find the rotation of the hand
+        (float, float, float) right_hand_rotation = (0, 0, 0);
+        (float, float, float) left_hand_rotation = (0, 0, 0);
+
+
+        using (StreamReader reader = new(rotate_hand_file))
+        {
+            while (!reader.EndOfStream)
+            {
+                //read the line
+                string line = reader.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                //param separated by comma
+                string[] parameters = line.Split(',');
+
+                if (parameters.Length != 4) continue;
+
+                // try parsing the first 4 as floats
+                if (!float.TryParse(parameters[0], out float x) ||
+                    !float.TryParse(parameters[1], out float y) ||
+                    !float.TryParse(parameters[2], out float z) ||
+                    !float.TryParse(parameters[3], out float is_right))
+                {
+                    continue;
+                }
+
+
+                if (is_right > 0) right_hand_rotation = Rotate_hand(x, y, z, true);
+                else left_hand_rotation = Rotate_hand(x, y, z, false);
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_rotated)
+                    Debug.LogWarning($"Hand over-rotated at ({x}, {y}, {z}), is_right: {is_right}");
+            }
+        }
+
+        //save the position of the hand rotations
+        position_record = string.Format("\"{0}\",\"{1}\"", right_hand_rotation, left_hand_rotation);
+
+        //find the position of the hand
+        (float, float, float) right_hand_position = (0, 0, 0);
+        (float, float, float) left_hand_position = (0, 0, 0);
+
+
+        using (StreamReader reader = new(move_hand_file))
+        {
+            while (!reader.EndOfStream)
+            {
+                //read the line
+                string line = reader.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                //param separated by comma
+                string[] parameters = line.Split(',');
+
+                if (parameters.Length != 4) continue;
+
+                // try parsing the first 4 as floats
+                if (!float.TryParse(parameters[0], out float x) ||
+                    !float.TryParse(parameters[1], out float y) ||
+                    !float.TryParse(parameters[2], out float z) ||
+                    !float.TryParse(parameters[3], out float is_right))
+                {
+                    continue;
+                }
+
+
+                if (is_right > 0) right_hand_position = Move_hand(x, y, z, true);
+                else left_hand_position = Move_hand(x, y, z, false);
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Hand over-moved at ({x}, {y}, {z}), is_right: {is_right}");
+            }
+        }
+
+        //record the hand position
+        position_record = position_record + string.Format(",\"{0}\",\"{1}\"", right_hand_position, left_hand_position);
+
+        //find the position of the hand
+        (float, float) body_position = (0, 0);
+
+        using (StreamReader reader = new(move_body_file))
+        {
+            while (!reader.EndOfStream)
+            {
+                //read the line
+                string line = reader.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                //param separated by comma
+                string[] parameters = line.Split(',');
+
+                if (parameters.Length != 2) continue;
+
+                // try parsing the first 2 as floats
+                if (!float.TryParse(parameters[0], out float x) ||
+                    !float.TryParse(parameters[1], out float z))
+                {
+                    continue;
+                }
+
+                body_position = Move_body(x, z);
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Body over-moved at ({x}, {z})");
+            }
+        }
+
+        //record the hand position
+        position_record = position_record + string.Format(",\"{0}\",\"{1}\"\n", body_position, wall_id);
+
+        //record the position of everything
+        File.AppendAllText(body_position_file, position_record);
+    }
     public (float, float, float) Rotate_hand(float x_angle, float y_angle, float z_angle, bool is_right_hand)
     {
         has_over_rotated = false;
@@ -75,6 +218,7 @@ public class AvatarController : MonoBehaviour
             r_current_rotation.y += y_angle;
             r_current_rotation.z += z_angle;
             right_hand_target.transform.eulerAngles = r_current_rotation;
+            return (r_current_rotation.x, r_current_rotation.y, r_current_rotation.z);
         }
         else
         {
@@ -83,9 +227,8 @@ public class AvatarController : MonoBehaviour
             l_current_rotation.y += y_angle;
             l_current_rotation.z += z_angle;
             left_hand_target.transform.eulerAngles = l_current_rotation;
+            return (l_current_rotation.x, l_current_rotation.y, l_current_rotation.z);
         }
-
-        return (x_angle, y_angle, z_angle);
     }
 
     //move hand from T-pose to the local position of the given transform
@@ -166,7 +309,7 @@ public class AvatarController : MonoBehaviour
         else if (final_z < min.z)
         {
             final_z = min.z;
-            z_movement = final_z- start_pos.z;
+            z_movement = final_z - start_pos.z;
         }
 
         if (x_movement != x_pos || z_movement != z_pos) has_over_moved = true;
