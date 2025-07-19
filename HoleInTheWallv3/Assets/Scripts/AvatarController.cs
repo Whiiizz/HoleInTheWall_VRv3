@@ -44,9 +44,9 @@ public class AvatarController : MonoBehaviour
         body_position_file = controller_path + "/body_position.csv";
 
         //Rotate_hand(100, 100, 350, true);
-        //Move_hand(10, 10, 10, true);
-        //Move_body(.2f, .2f);
-        Read_movement_file(10);
+        //Move_hand(-.2f, -1, -.2f, true);
+        //Move_body(.3f, -.2f, 90f);
+        //Read_movement_file(10);
     }
 
     // Update is called once per frame
@@ -62,7 +62,6 @@ public class AvatarController : MonoBehaviour
         //find the rotation of the hand
         (float, float, float) right_hand_rotation = (0, 0, 0);
         (float, float, float) left_hand_rotation = (0, 0, 0);
-
 
         using (StreamReader reader = new(rotate_hand_file))
         {
@@ -104,7 +103,6 @@ public class AvatarController : MonoBehaviour
         (float, float, float) right_hand_position = (0, 0, 0);
         (float, float, float) left_hand_position = (0, 0, 0);
 
-
         using (StreamReader reader = new(move_hand_file))
         {
             while (!reader.EndOfStream)
@@ -142,7 +140,7 @@ public class AvatarController : MonoBehaviour
         position_record = position_record + string.Format(",\"{0}\",\"{1}\"", right_hand_position, left_hand_position);
 
         //find the position of the hand
-        (float, float) body_position = (0, 0);
+        (float, float, float) body_position = (0, 0, 0);
 
         using (StreamReader reader = new(move_body_file))
         {
@@ -156,20 +154,21 @@ public class AvatarController : MonoBehaviour
                 //param separated by comma
                 string[] parameters = line.Split(',');
 
-                if (parameters.Length != 2) continue;
+                if (parameters.Length != 3) continue;
 
-                // try parsing the first 2 as floats
+                // try parsing the first 3 as floats
                 if (!float.TryParse(parameters[0], out float x) ||
-                    !float.TryParse(parameters[1], out float z))
+                    !float.TryParse(parameters[1], out float z) ||
+                    !float.TryParse(parameters[2], out float r))
                 {
                     continue;
                 }
 
-                body_position = Move_body(x, z);
+                body_position = Move_body(x, z, r);
 
                 //warn that the parameters are out of bounds, resulting in sparsity issues
                 if (has_over_moved)
-                    Debug.LogWarning($"Body over-moved at ({x}, {z})");
+                    Debug.LogWarning($"Body over-moved at ({x}, {z}, {r})");
             }
         }
 
@@ -179,6 +178,7 @@ public class AvatarController : MonoBehaviour
         //record the position of everything
         File.AppendAllText(body_position_file, position_record);
     }
+
     public (float, float, float) Rotate_hand(float x_angle, float y_angle, float z_angle, bool is_right_hand)
     {
         has_over_rotated = false;
@@ -265,8 +265,8 @@ public class AvatarController : MonoBehaviour
         return (target.localPosition.x, target.localPosition.y, target.localPosition.z);
     }
 
-    //no y_pos because we assume avatar can't jump/fly
-    public (float, float) Move_body(float x_pos, float z_pos)
+    //no y_pos because we assume avatar can't jump/fly. y_rotation needs to be constrained to 0-360
+    public (float, float, float) Move_body(float x_pos, float z_pos, float y_rotation)
     {
         has_over_moved = false;
 
@@ -316,7 +316,9 @@ public class AvatarController : MonoBehaviour
 
         //move avatar
         transform.position = new(final_x, transform.position.y, final_z);
+        //rotate avatar
+        transform.eulerAngles = new(transform.eulerAngles.x, transform.eulerAngles.y + (y_rotation % 360), transform.eulerAngles.z);
 
-        return (x_movement, z_movement);
+        return (x_movement, z_movement, transform.eulerAngles.y);
     }
 }
