@@ -12,10 +12,15 @@ public class AvatarController : MonoBehaviour
     [SerializeField] private Transform left_hand_target;
     [SerializeField] private Transform left_hand_forearm;
     [SerializeField] private Transform hip_target;
+    [SerializeField] private Transform right_leg_target;
+    [SerializeField] private Transform left_leg_target;
+    [SerializeField] private Transform left_hip_joint;                                             //determines the rotation of current hip with left leg
+    [SerializeField] private Transform right_hip_joint;                                            //determines the rotation of current hip with right leg
     [SerializeField] private SphereCollider right_arm_span;
     [SerializeField] private SphereCollider left_arm_span;
     [SerializeField] private BoxCollider movement_boundary;
 
+    private float move_spd = 1f;
 
     // variables to track if given position or rotation exceeds avatar movement (to reduce sparsity)
     public bool has_over_moved = false;
@@ -364,5 +369,42 @@ public class AvatarController : MonoBehaviour
 
         return (hip_reposition.x, hip_reposition.y, hip_reposition.z);
 
+    }
+
+    public (float, float, float) Move_legs(float x_pos, float y_pos, float z_pos, bool isRight)
+    {
+        has_over_moved = false;
+
+
+
+        return (0f, 0f, 0f);
+    }
+
+    private Vector3 New_leg_destination(Vector3 destination, bool isRight)
+    {
+        //x axis = leg swing side(outward r+ l-) to side(inward r- l+) : Limitation (inward 20 degrees, outward 40 degrees)
+        //y axis = bend knee : 
+        //z axis = leg swing forward(+) and backward(-) : Limitation (-30 degrees to 100)
+
+        Transform leg_transform = isRight ? right_leg_target : left_leg_target;
+        Transform hip_check = isRight ? right_hip_joint : left_hip_joint;
+        Vector3 old_pos = leg_transform.position;
+
+        //min, max is different for the two legs
+        //the joint rotation will have x rotation starting at 90 degrees respective to the starting t-pose
+        (float, float) x_limitation = isRight ? (90-20, 90+40) : (90-40, 90+20);
+
+        //move the lef towards the destination
+        leg_transform.position = Vector3.MoveTowards(old_pos, destination, move_spd);
+
+        //check if the hip rotation is within human limits
+        Vector3 joint_rotation = hip_check.eulerAngles;
+
+
+
+        //not finished
+        
+
+        return destination;
     }
 }
