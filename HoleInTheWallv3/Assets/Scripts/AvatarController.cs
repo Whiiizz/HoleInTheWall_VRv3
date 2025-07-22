@@ -11,9 +11,11 @@ public class AvatarController : MonoBehaviour
     [SerializeField] private Transform right_hand_forearm;
     [SerializeField] private Transform left_hand_target;
     [SerializeField] private Transform left_hand_forearm;
+    [SerializeField] private Transform hip_target;
     [SerializeField] private SphereCollider right_arm_span;
     [SerializeField] private SphereCollider left_arm_span;
     [SerializeField] private BoxCollider movement_boundary;
+
 
     // variables to track if given position or rotation exceeds avatar movement (to reduce sparsity)
     public bool has_over_moved = false;
@@ -183,7 +185,7 @@ public class AvatarController : MonoBehaviour
     {
         has_over_rotated = false;
 
-        //check if within human bounds
+        //check if within human bounds (dont need to be too realistic)
         if (Math.Abs(x_angle) > 90f)
         {
             has_over_rotated = true;
@@ -320,5 +322,47 @@ public class AvatarController : MonoBehaviour
         transform.eulerAngles = new(transform.eulerAngles.x, transform.eulerAngles.y + (y_rotation % 360), transform.eulerAngles.z);
 
         return (x_movement, z_movement, transform.eulerAngles.y);
+    }
+
+
+    public (float, float, float) Rotate_hip(float x_angle, float y_angle, float z_angle)
+    {
+        //x rotation bends forward(+) and back(-) Limit: (-30 degrees to 100) from Hip Flexion
+        //y rotation twist side(r+) to side(l-) Limit: (-30 degrees to 30) from Thoraco-Lumbar Spine Rotation
+        //z rotation bends side(l+) to side(r-) Limit: (-25 degrees to 25) from Thoraco-Lumbar Spine Lateral Flexion
+        has_over_rotated = false;
+
+        if (x_angle > 100f || x_angle < -30f)
+        {
+            has_over_rotated = true;
+            //set as max/min rotation
+            if (x_angle > 100f) x_angle = 100f;
+            else x_angle = -30f;
+        }
+        if (Math.Abs(y_angle) > 30f)
+        {
+            has_over_rotated = true;
+            //set as max/min rotation
+            if (y_angle > 0) y_angle = 30f;
+            else y_angle = -30f;
+        }
+        if (Math.Abs(z_angle) > 25f)
+        {
+            has_over_rotated = true;
+            //set as max rotation
+            if (z_angle > 0) z_angle = 25f;
+            else z_angle = -25f;
+        }
+
+        UnityEngine.Vector3 hip_reposition = hip_target.eulerAngles;
+
+        //rotate the hip based on current position
+        hip_reposition.x += x_angle;
+        hip_reposition.y += y_angle;
+        hip_reposition.z += z_angle;
+        hip_target.transform.eulerAngles = hip_reposition;
+
+        return (hip_reposition.x, hip_reposition.y, hip_reposition.z);
+
     }
 }

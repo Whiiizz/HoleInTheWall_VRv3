@@ -123,6 +123,9 @@ public class ObstacleGenerator : MonoBehaviour
                     GameObject rect_obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     rect_obj.name = i + " , " + j;
 
+                    rect_obj.tag = "Walls";
+                    rect_obj.GetComponent<BoxCollider>().isTrigger = true;
+
                     //make sure the last col or row reflects the correct sizing
                     if (i == 0 && leftover_height != 0)
                     {
@@ -242,6 +245,9 @@ public class ObstacleGenerator : MonoBehaviour
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
+        cube.tag = "Walls";
+        cube.GetComponent<BoxCollider>().isTrigger = true;
+        
         //create the block with right size
         cube.transform.localScale = new Vector3(custom_width, custom_height, block_depth);
         // set parent to this GameObject
