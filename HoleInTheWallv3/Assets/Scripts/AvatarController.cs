@@ -375,7 +375,7 @@ public class AvatarController : MonoBehaviour
     {
         has_over_moved = false;
 
-
+        //not finished
 
         return (0f, 0f, 0f);
     }
