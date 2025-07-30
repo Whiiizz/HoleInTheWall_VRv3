@@ -2,26 +2,21 @@ movement types:
 
 
 
-0 = rotate LEFT **hand				param: x angle, y angle, z angle**
+0 = move LEFT **hand				param: x pos, y pos, z pos**
 
-1 = rotate RIGHT **hand				param: x angle, y angle, z angle**	
+1 = move RIGHT **hand				param: x pos, y pos, z pos**
 
-2 = move LEFT **hand				param: x pos, y pos, z pos**
+2 = rotate **hips					param: x angle, y angle, z angle**
 
-3 = move RIGHT **hand				param: x pos, y pos, z pos**
+3 = move LEFT **leg				param: x pos, y pos, z pos**
 
-4 = rotate **hips					param: x angle, y angle, z angle**
+4 = move RIGHT **leg				param: x pos, y pos, z pos**
 
-5 = move LEFT **leg				param: x pos, y pos, z pos**
-
-6 = move RIGHT **leg				param: x pos, y pos, z pos**
-
-7 = move **body					param: x pos, z pos, y angle**
+5 = move **body					param: x pos, y angle, z pos**
 
 
 
-**Each entry in move\_direction.csv should follow: 
+\*\*Each entry in move\_direction.csv should follow:
 
-movement type, param 1, param 2, param 3**
-	
+movement type, param 1, param 2, param 3\*\*
 

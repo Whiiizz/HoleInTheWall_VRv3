@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Unity.VisualScripting;
@@ -57,205 +58,169 @@ public class AvatarController : MonoBehaviour
         final_position_file = controller_path + "/final_position.csv";
 
         //tests
-        //Rotate_hand(100, 100, 350, true);
-        //Move_hand(-.2f, -1, -.2f, true);
-        //Move_body(.3f, -.2f, 90f);
         //Read_movement_file(10);
+        //StartCoroutine(Generate_Movement(0));
+
     }
 
     // Update is called once per frame
     void Update()
     {
+        Generate_Movement(0);
 
     }
 
+    //when reading file, make sure to reset controller first to have the pose in the correct starting pose
     public void Read_movement_file(int wall_id)
     {
         Dictionary<string, (float, float, float)> position_record = new()
         {
             //populate the dictionary                                                                           // order
-            ["l_hand_rotation"] = (0, 0, 0),                                                                    // 0
-            ["r_hand_rotation"] = (0, 0, 0),                                                                    // 1
-            ["l_hand_position"] = (0, 0, 0),                                                                    // 2
-            ["r_hand_position"] = (0, 0, 0),                                                                    // 3
-            ["hip_rotation"] = (0, 0, 0),                                                                       // 4
-            ["l_leg_position"] = (0, 0, 0),                                                                     // 5
-            ["r_leg_position"] = (0, 0, 0),                                                                     // 6
-            ["body_position"] = (transform.position.x, transform.position.y, transform.position.z)              // 7
+            ["l_hand_position"] = (0, 0, 0),                                                                    // 0
+            ["r_hand_position"] = (0, 0, 0),                                                                    // 1
+            ["hip_rotation"] = (0, 0, 0),                                                                       // 2
+            ["l_leg_position"] = (0, 0, 0),                                                                     // 3
+            ["r_leg_position"] = (0, 0, 0),                                                                     // 4
+            ["body_position"] = (transform.position.x, transform.position.y, transform.position.z)              // 5
         };
 
         //find the rotation of the hand
 
-        // (float, float, float) right_hand_rotation = (0, 0, 0);
-        // (float, float, float) left_hand_rotation = (0, 0, 0);
+        using (StreamReader reader = new(direction_file))
+        {
+            while (!reader.EndOfStream)
+            {
+                //read the line
+                string line = reader.ReadLine();
 
-        // using (StreamReader reader = new(rotate_hand_file))
-        // {
-        //     while (!reader.EndOfStream)
-        //     {
-        //         //read the line
-        //         string line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
-        //         if (string.IsNullOrWhiteSpace(line)) continue;
+                //param separated by comma
+                string[] parameters = line.Split(',');
 
-        //         //param separated by comma
-        //         string[] parameters = line.Split(',');
+                if (parameters.Length != 4) continue;
 
-        //         if (parameters.Length != 4) continue;
+                // try parsing the first 4 items
+                if (!int.TryParse(parameters[0], out int move_type) ||
+                    !float.TryParse(parameters[1], out float x) ||
+                    !float.TryParse(parameters[2], out float y) ||
+                    !float.TryParse(parameters[3], out float z))
+                {
+                    continue;
+                }
 
-        //         // try parsing the first 4 as floats
-        //         if (!float.TryParse(parameters[0], out float x) ||
-        //             !float.TryParse(parameters[1], out float y) ||
-        //             !float.TryParse(parameters[2], out float z) ||
-        //             !float.TryParse(parameters[3], out float is_right))
-        //         {
-        //             continue;
-        //         }
+                //change based on the movement type
+                switch (move_type)
+                {
+                    case 0:
+                        position_record["l_hand_position"] = Move_hand(x, y, z, false);
 
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_moved)
+                            Debug.LogWarning($"Left hand over-moved at ({x}, {y}, {z}).");
+                        break;
+                    case 1:
+                        position_record["r_hand_position"] = Move_hand(x, y, z, true);
 
-        //         if (is_right > 0) right_hand_rotation = Rotate_hand(x, y, z, true);
-        //         else left_hand_rotation = Rotate_hand(x, y, z, false);
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_moved)
+                            Debug.LogWarning($"Right hand over-moved at ({x}, {y}, {z}).");
+                        break;
+                    case 2:
+                        position_record["hip_rotation"] = Rotate_hip(x, y, z);
 
-        //         //warn that the parameters are out of bounds, resulting in sparsity issues
-        //         if (has_over_rotated)
-        //             Debug.LogWarning($"Hand over-rotated at ({x}, {y}, {z}), is_right: {is_right}");
-        //     }
-        // }
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_rotated)
+                            Debug.LogWarning($"Hips over-rotated at ({x}, {y}, {z})");
+                        break;
+                    case 3:
+                        position_record["l_leg_position"] = Move_legs(x, y, z, false);
 
-        // //save the position of the hand rotations
-        // position_record = string.Format("\"{0}\",\"{1}\"", right_hand_rotation, left_hand_rotation);
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_moved)
+                            Debug.LogWarning($"Left leg over-moved at ({x}, {y}, {z}).");
+                        break;
+                    case 4:
+                        position_record["r_leg_position"] = Move_legs(x, y, z, true);
 
-        // //find the position of the hand
-        // (float, float, float) right_hand_position = (0, 0, 0);
-        // (float, float, float) left_hand_position = (0, 0, 0);
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_moved)
+                            Debug.LogWarning($"Right leg over-moved at ({x}, {y}, {z}).");
+                        break;
+                    case 5:
+                        position_record["body_position"] = Move_body(x, y, z);
 
-        // using (StreamReader reader = new(move_hand_file))
-        // {
-        //     while (!reader.EndOfStream)
-        //     {
-        //         //read the line
-        //         string line = reader.ReadLine();
+                        //warn that the parameters are out of bounds, resulting in sparsity issues
+                        if (has_over_moved)
+                            Debug.LogWarning($"Body over-moved at ({x}, {y} (rotation), {z}).");
+                        break;
+                    default:
+                        Debug.LogWarning("Incorrect move type from direction file");
+                        break;
+                }
+            }
+        }
 
-        //         if (string.IsNullOrWhiteSpace(line)) continue;
+        //record the hand position
+        string data = string.Format("{0},\"{1}\",\"{2}\",\"{3}\",\"{4}\",\"{5}\",\"{6}\",\"{7}\"\n",
+                                    wall_id, position_record["l_hand_position"], position_record["r_hand_position"], position_record["hip_rotation"],
+                                    position_record["l_leg_position"], position_record["r_leg_position"], position_record["body_position"]);
 
-        //         //param separated by comma
-        //         string[] parameters = line.Split(',');
-
-        //         if (parameters.Length != 4) continue;
-
-        //         // try parsing the first 4 as floats
-        //         if (!float.TryParse(parameters[0], out float x) ||
-        //             !float.TryParse(parameters[1], out float y) ||
-        //             !float.TryParse(parameters[2], out float z) ||
-        //             !float.TryParse(parameters[3], out float is_right))
-        //         {
-        //             continue;
-        //         }
-
-
-        //         if (is_right > 0) right_hand_position = Move_hand(x, y, z, true);
-        //         else left_hand_position = Move_hand(x, y, z, false);
-
-        //         //warn that the parameters are out of bounds, resulting in sparsity issues
-        //         if (has_over_moved)
-        //             Debug.LogWarning($"Hand over-moved at ({x}, {y}, {z}), is_right: {is_right}");
-        //     }
-        // }
-
-        // //record the hand position
-        // position_record = position_record + string.Format(",\"{0}\",\"{1}\"", right_hand_position, left_hand_position);
-
-        // //find the position of the hand
-        // (float, float, float) body_position = (0, 0, 0);
-
-        // using (StreamReader reader = new(move_body_file))
-        // {
-        //     while (!reader.EndOfStream)
-        //     {
-        //         //read the line
-        //         string line = reader.ReadLine();
-
-        //         if (string.IsNullOrWhiteSpace(line)) continue;
-
-        //         //param separated by comma
-        //         string[] parameters = line.Split(',');
-
-        //         if (parameters.Length != 3) continue;
-
-        //         // try parsing the first 3 as floats
-        //         if (!float.TryParse(parameters[0], out float x) ||
-        //             !float.TryParse(parameters[1], out float z) ||
-        //             !float.TryParse(parameters[2], out float r))
-        //         {
-        //             continue;
-        //         }
-
-        //         body_position = Move_body(x, z, r);
-
-        //         //warn that the parameters are out of bounds, resulting in sparsity issues
-        //         if (has_over_moved)
-        //             Debug.LogWarning($"Body over-moved at ({x}, {z}, {r})");
-        //     }
-        // }
-
-        // //record the hand position
-        // position_record = position_record + string.Format(",\"{0}\",\"{1}\"\n", body_position, wall_id);
-
-        // //record the position of everything
-        // File.AppendAllText(body_position_file, position_record);
+        //record the position of everything
+        File.AppendAllText(final_position_file, data);
     }
 
-    public (float, float, float) Rotate_hand(float x_angle, float y_angle, float z_angle, bool is_right_hand)
-    {
-        has_over_rotated = false;
+    // public (float, float, float) Rotate_hand(float x_angle, float y_angle, float z_angle, bool is_right_hand)
+    // {
+    //     has_over_rotated = false;
 
-        //check if within human bounds (dont need to be too realistic)
-        if (Math.Abs(x_angle) > 90f)
-        {
-            has_over_rotated = true;
-            //set as max rotation
-            if (x_angle > 0) x_angle = 90f;
-            else x_angle = -90f;
-        }
-        if (Math.Abs(y_angle) > 90f)
-        {
-            has_over_rotated = true;
-            //set as max rotation
-            if (y_angle > 0) y_angle = 90f;
-            else y_angle = -90f;
-        }
-        if (Math.Abs(z_angle) > 90f)
-        {
-            has_over_rotated = true;
-            //set as max rotation
-            if (z_angle > 0) z_angle = 90f;
-            else z_angle = -90f;
-        }
+    //     //check if within human bounds (dont need to be too realistic)
+    //     if (Math.Abs(x_angle) > 90f)
+    //     {
+    //         has_over_rotated = true;
+    //         //set as max rotation
+    //         if (x_angle > 0) x_angle = 90f;
+    //         else x_angle = -90f;
+    //     }
+    //     if (Math.Abs(y_angle) > 90f)
+    //     {
+    //         has_over_rotated = true;
+    //         //set as max rotation
+    //         if (y_angle > 0) y_angle = 90f;
+    //         else y_angle = -90f;
+    //     }
+    //     if (Math.Abs(z_angle) > 90f)
+    //     {
+    //         has_over_rotated = true;
+    //         //set as max rotation
+    //         if (z_angle > 0) z_angle = 90f;
+    //         else z_angle = -90f;
+    //     }
 
 
-        UnityEngine.Vector3 r_current_rotation = right_hand_target.transform.eulerAngles;
-        UnityEngine.Vector3 l_current_rotation = left_hand_target.transform.eulerAngles;
+    //     UnityEngine.Vector3 r_current_rotation = right_hand_target.transform.eulerAngles;
+    //     UnityEngine.Vector3 l_current_rotation = left_hand_target.transform.eulerAngles;
 
-        //ASSUMING T POSE
-        if (is_right_hand)
-        {
-            //rotate the hand based on current position
-            r_current_rotation.x += x_angle;
-            r_current_rotation.y += y_angle;
-            r_current_rotation.z += z_angle;
-            right_hand_target.transform.eulerAngles = r_current_rotation;
-            return (r_current_rotation.x, r_current_rotation.y, r_current_rotation.z);
-        }
-        else
-        {
-            //rotate hand based on current position
-            l_current_rotation.x += x_angle;
-            l_current_rotation.y += y_angle;
-            l_current_rotation.z += z_angle;
-            left_hand_target.transform.eulerAngles = l_current_rotation;
-            return (l_current_rotation.x, l_current_rotation.y, l_current_rotation.z);
-        }
-    }
+    //     //ASSUMING T POSE
+    //     if (is_right_hand)
+    //     {
+    //         //rotate the hand based on current position
+    //         r_current_rotation.x += x_angle;
+    //         r_current_rotation.y += y_angle;
+    //         r_current_rotation.z += z_angle;
+    //         right_hand_target.transform.eulerAngles = r_current_rotation;
+    //         return (r_current_rotation.x, r_current_rotation.y, r_current_rotation.z);
+    //     }
+    //     else
+    //     {
+    //         //rotate hand based on current position
+    //         l_current_rotation.x += x_angle;
+    //         l_current_rotation.y += y_angle;
+    //         l_current_rotation.z += z_angle;
+    //         left_hand_target.transform.eulerAngles = l_current_rotation;
+    //         return (l_current_rotation.x, l_current_rotation.y, l_current_rotation.z);
+    //     }
+    // }
 
     //move hand from T-pose to the local position of the given transform
     public (float, float, float) Move_hand(float x_pos, float y_pos, float z_pos, bool is_right_hand)
@@ -292,7 +257,7 @@ public class AvatarController : MonoBehaviour
     }
 
     //no y_pos because we assume avatar can't jump/fly. y_rotation needs to be constrained to 0-360
-    public (float, float, float) Move_body(float x_pos, float z_pos, float y_rotation)
+    public (float, float, float) Move_body(float x_pos, float y_rotation, float z_pos)
     {
         has_over_moved = false;
 
@@ -394,21 +359,109 @@ public class AvatarController : MonoBehaviour
     {
         has_over_moved = false;
 
-        //not finished
+        //find which one is the leg span limitation
+        MeshCollider leg_span = isRight ? right_leg_span : left_leg_span;
+        Transform target = isRight ? right_leg_target : left_leg_target;
 
-        return (0f, 0f, 0f);
+        //move the leg based on local values; transformation based off the parents
+        UnityEngine.Vector3 target_position = new(x_pos, y_pos, z_pos);
+        target.localPosition = target_position;
+
+        //check if within radius
+        if (!leg_span.bounds.Contains(target.position))
+        {
+            has_over_moved = true;
+
+            //move to the closest surface point of the mesh collider
+            target.position = leg_span.ClosestPoint(target.position);
+        }
+
+        return (target.localPosition.x, target.localPosition.y, target.localPosition.z);
     }
 
-    public void Reset_Controller()
+    public GameObject Reset_Controller()
     {
         //make sure colliders do not affect newly instantiated object
         transform.parent.gameObject.SetActive(false);
 
         //create and reset controller environment
-        Instantiate(prefab, prefab_position, Quaternion.identity);
+        GameObject new_instance = Instantiate(prefab, prefab_position, Quaternion.identity);
 
         //delete itself
         Destroy(transform.parent.gameObject);
+        
+        return new_instance;
+    }
+
+    //testing
+    private IEnumerator Generate_Movement(int move_type)
+    {
+        System.Random num_gen = new();
+
+        float min_move = -5;
+        float max_move = 5;
+
+        float min_rotate = 0f;
+        float max_rotate = 360f;
+
+        float x = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+        float y = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+        float z = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+
+        //change based on the movement type
+        switch (move_type)
+        {
+            case 0:
+                Debug.Log(Move_hand(x, y, z, false));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Left hand over-moved at ({x}, {y}, {z}).");
+                break;
+            case 1:
+                Debug.Log(Move_hand(x, y, z, true));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Right hand over-moved at ({x}, {y}, {z}).");
+                break;
+            case 2:
+                x = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                y = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                z = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                Debug.Log(Rotate_hip(x, y, z));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_rotated)
+                    Debug.LogWarning($"Hips over-rotated at ({x}, {y}, {z})");
+                break;
+            case 3:
+                Debug.Log(Move_legs(x, y, z, false));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Left leg over-moved at ({x}, {y}, {z}).");
+                break;
+            case 4:
+                Debug.Log(Move_legs(x, y, z, true));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Right leg over-moved at ({x}, {y}, {z}).");
+                break;
+            case 5:
+                y = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                Debug.Log(Move_body(x, y, z));
+
+                //warn that the parameters are out of bounds, resulting in sparsity issues
+                if (has_over_moved)
+                    Debug.LogWarning($"Body over-moved at ({x}, {y} (rotation), {z}).");
+                break;
+            default:
+                Debug.LogWarning("Incorrect move type");
+                break;
+        }
+        yield return new WaitForSeconds(2.0f);
     }
 
 }
