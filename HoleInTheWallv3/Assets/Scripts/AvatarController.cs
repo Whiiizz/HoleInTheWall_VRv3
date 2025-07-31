@@ -9,8 +9,8 @@ using UnityEngine.UIElements;
 
 public class AvatarController : MonoBehaviour
 {
-    [Header("Prefab for COntroller")]
-    [SerializeField] private GameObject prefab;
+    private readonly string prefab_path = "Controller_AI";
+    [SerializeField] private GameObject static_animator;
 
     [Header("Limb Targets")]
     [SerializeField] private Transform right_hand_target;
@@ -45,7 +45,7 @@ public class AvatarController : MonoBehaviour
     // Start is called before the first frame update    
     void Start()
     {
-        prefab_position = transform.parent.position;
+        prefab_position = transform.position;
 
         //check for serialized fields
         if (right_hand_target == null || left_hand_target == null || hip_target == null || right_leg_target == null || left_leg_target == null)
@@ -59,16 +59,11 @@ public class AvatarController : MonoBehaviour
 
         //tests
         //Read_movement_file(10);
+        //Generate_Movement_File(6);
         //StartCoroutine(Generate_Movement(0));
 
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        Generate_Movement(0);
-
-    }
 
     //when reading file, make sure to reset controller first to have the pose in the correct starting pose
     public void Read_movement_file(int wall_id)
@@ -81,7 +76,7 @@ public class AvatarController : MonoBehaviour
             ["hip_rotation"] = (0, 0, 0),                                                                       // 2
             ["l_leg_position"] = (0, 0, 0),                                                                     // 3
             ["r_leg_position"] = (0, 0, 0),                                                                     // 4
-            ["body_position"] = (transform.position.x, transform.position.y, transform.position.z)              // 5
+            ["body_position"] = (static_animator.transform.position.x, static_animator.transform.position.y, static_animator.transform.position.z)              // 5
         };
 
         //find the rotation of the hand
@@ -162,7 +157,7 @@ public class AvatarController : MonoBehaviour
         }
 
         //record the hand position
-        string data = string.Format("{0},\"{1}\",\"{2}\",\"{3}\",\"{4}\",\"{5}\",\"{6}\",\"{7}\"\n",
+        string data = string.Format("{0},\"{1}\",\"{2}\",\"{3}\",\"{4}\",\"{5}\",\"{6}\"\n",
                                     wall_id, position_record["l_hand_position"], position_record["r_hand_position"], position_record["hip_rotation"],
                                     position_record["l_leg_position"], position_record["r_leg_position"], position_record["body_position"]);
 
@@ -231,26 +226,17 @@ public class AvatarController : MonoBehaviour
         SphereCollider arm_span = is_right_hand ? right_arm_span : left_arm_span;
         Transform target = is_right_hand ? right_hand_target : left_hand_target;
 
-        //calculate the center
-        Transform center_transform = arm_span.transform;
-        UnityEngine.Vector3 center = center_transform.TransformPoint(arm_span.center);
-
         //move the hand based on local values; transformation based off the parents
         UnityEngine.Vector3 target_position = new(x_pos, y_pos, z_pos);
         target.localPosition = target_position;
 
         //check if within radius
-        float radius = arm_span.radius * center_transform.lossyScale.x;
-
-        //check if target is within the limitation sphere
-        UnityEngine.Vector3 offset = target.position - center;
-
-        if (offset.magnitude > radius)
+        if (!arm_span.bounds.Contains(target.position))
         {
-            //clamp position to surface of sphere
-            UnityEngine.Vector3 revised_position = center + offset.normalized * radius;
-            target.localPosition = target.parent.InverseTransformPoint(revised_position);
             has_over_moved = true;
+
+            //move to the closest surface point of the sphere collider
+            target.position = arm_span.ClosestPoint(target.position);
         }
 
         return (target.localPosition.x, target.localPosition.y, target.localPosition.z);
@@ -262,7 +248,7 @@ public class AvatarController : MonoBehaviour
         has_over_moved = false;
 
         //store the original transformation
-        UnityEngine.Vector3 start_pos = transform.position;
+        UnityEngine.Vector3 start_pos = static_animator.transform.position;
 
         //boundary of the movement in world space rather than local
         UnityEngine.Vector3 boundary_scaled = UnityEngine.Vector3.Scale(movement_boundary.size, movement_boundary.transform.lossyScale);
@@ -277,8 +263,8 @@ public class AvatarController : MonoBehaviour
         float z_movement = z_pos;
 
         //predict the final destination
-        float final_x = transform.position.x + x_pos;
-        float final_z = transform.position.z + z_pos;
+        float final_x = static_animator.transform.position.x + x_pos;
+        float final_z = static_animator.transform.position.z + z_pos;
 
         //check if the predicted transformation is within bounds. if not, snap to max or min position
         if (final_x > max.x)
@@ -306,11 +292,11 @@ public class AvatarController : MonoBehaviour
         if (x_movement != x_pos || z_movement != z_pos) has_over_moved = true;
 
         //move avatar
-        transform.position = new(final_x, transform.position.y, final_z);
+        static_animator.transform.position = new(final_x, static_animator.transform.position.y, final_z);
         //rotate avatar
-        transform.eulerAngles = new(transform.eulerAngles.x, transform.eulerAngles.y + (y_rotation % 360), transform.eulerAngles.z);
+        static_animator.transform.eulerAngles = new(static_animator.transform.eulerAngles.x, static_animator.transform.eulerAngles.y + (y_rotation % 360), static_animator.transform.eulerAngles.z);
 
-        return (x_movement, z_movement, transform.eulerAngles.y);
+        return (x_movement, z_movement, static_animator.transform.eulerAngles.y);
     }
 
 
@@ -381,15 +367,14 @@ public class AvatarController : MonoBehaviour
 
     public GameObject Reset_Controller()
     {
-        //make sure colliders do not affect newly instantiated object
-        transform.parent.gameObject.SetActive(false);
-
         //create and reset controller environment
+        GameObject prefab = Resources.Load(prefab_path) as GameObject;
         GameObject new_instance = Instantiate(prefab, prefab_position, Quaternion.identity);
+        new_instance.name = "Controller_AI_Scene";
 
         //delete itself
-        Destroy(transform.parent.gameObject);
-        
+        Destroy(this.gameObject);
+
         return new_instance;
     }
 
@@ -461,7 +446,71 @@ public class AvatarController : MonoBehaviour
                 Debug.LogWarning("Incorrect move type");
                 break;
         }
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(3.0f);
+
+        Reset_Controller();
+    }
+
+    private void Generate_Movement_File(int move_count)
+    {
+        string data = "";
+
+        System.Random num_gen = new();
+        int move_type;
+        
+        while (move_count > 0)
+        {
+            move_type = UnityEngine.Random.Range(0, 6);
+
+            float min_move = -5;
+            float max_move = 5;
+
+            float min_rotate = 0f;
+            float max_rotate = 360f;
+
+            float x = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+            float y = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+            float z = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
+
+            //change based on the movement type
+            switch (move_type)
+            {
+                case 0:
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                case 1:
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                case 2:
+                    x = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                    y = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                    z = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                case 3:
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                case 4:
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                case 5:
+                    y = (float)(num_gen.NextDouble() * (max_rotate - min_rotate));
+                    data += string.Format("{0},{1},{2},{3}\n", move_type, x, y, z);
+                    break;
+                default:
+                    Debug.LogWarning("Incorrect move type");
+                    break;
+            }
+
+            move_count--;
+        }
+
+        using (var file_writer = new StreamWriter(direction_file, false))
+        {
+            file_writer.WriteLine(data);
+        }
+
+        Read_movement_file(-1);
     }
 
 }

@@ -36,7 +36,7 @@ public class HumanoidSetUp : MonoBehaviour
     {
         if (masterRoot == null) Debug.LogError("masterRoot not assigned.");
         if (slaveRoot == null) Debug.LogError("slaveRoot not assigned.");
-        if (characterCamera == null) Debug.LogError("characterCamera not assigned.");
+        //if (characterCamera == null) Debug.LogError("characterCamera not assigned.");
 
         masterController = this.GetComponentInChildren<MasterController>();
         if (masterController == null) Debug.LogError("MasterControler not found.");
