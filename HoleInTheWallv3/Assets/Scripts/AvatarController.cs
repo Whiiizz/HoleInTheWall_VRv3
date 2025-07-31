@@ -58,10 +58,9 @@ public class AvatarController : MonoBehaviour
         final_position_file = controller_path + "/final_position.csv";
 
         //tests
-        //Read_movement_file(10);
+        //Read_movement_file(11);
         //Generate_Movement_File(6);
-        //StartCoroutine(Generate_Movement(0));
-
+        //StartCoroutine(Generate_Movement(5));
     }
 
 
@@ -386,7 +385,7 @@ public class AvatarController : MonoBehaviour
         float min_move = -5;
         float max_move = 5;
 
-        float min_rotate = 0f;
+        float min_rotate = -360f;
         float max_rotate = 360f;
 
         float x = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);
@@ -465,7 +464,7 @@ public class AvatarController : MonoBehaviour
             float min_move = -5;
             float max_move = 5;
 
-            float min_rotate = 0f;
+            float min_rotate = -360f;
             float max_rotate = 360f;
 
             float x = (float)(num_gen.NextDouble() * (max_move - min_move) + min_move);

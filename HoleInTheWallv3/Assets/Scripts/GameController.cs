@@ -97,7 +97,7 @@ public class GameController : MonoBehaviour
                 logTimer = Time.time;
             }
         }
-        scoreText.text = "Score: " + gameScore.ToString();
+        if(scoreText != null) scoreText.text = "Score: " + gameScore.ToString();
         
         float time = Time.time;
         if(checkmarkTime > 0 && time - checkmarkTime > 3)

@@ -21,6 +21,11 @@ public class ObstacleGenerator : MonoBehaviour
     //second way to generate the wall
     public int custom_cube_amt = 5;
 
+    private bool is_waiting = true;
+    private float timer = 0;
+    private float wait_time = 5f;                                                     //wait until ragdoll is done with physics
+    private float move_spd = .1f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -45,12 +50,13 @@ public class ObstacleGenerator : MonoBehaviour
         //                         };
 
         // custom_build(block_param);
+
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        Move_wall();
     }
 
     public void Set_dim()
@@ -247,7 +253,7 @@ public class ObstacleGenerator : MonoBehaviour
 
         cube.tag = "Walls";
         cube.GetComponent<BoxCollider>().isTrigger = true;
-        
+
         //create the block with right size
         cube.transform.localScale = new Vector3(custom_width, custom_height, block_depth);
         // set parent to this GameObject
@@ -256,5 +262,19 @@ public class ObstacleGenerator : MonoBehaviour
         // apply local offset relative to this transform
         Vector3 localOffset = new(x_axis, y_axis, z_axis);
         cube.transform.position = transform.TransformPoint(localOffset);
+    }
+
+    private void Move_wall()
+    {
+        if (is_waiting)
+        {
+            timer += Time.deltaTime;
+            if (timer >= wait_time)
+            {
+                is_waiting = false;
+                timer = 0f;
+            }
+        }
+        else transform.position = new(transform.position.x, transform.position.y, transform.position.z - move_spd);
     }
 }
