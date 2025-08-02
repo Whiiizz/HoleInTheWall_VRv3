@@ -58,7 +58,7 @@ public class AvatarController : MonoBehaviour
         final_position_file = controller_path + "/final_position.csv";
 
         //tests
-        //Read_movement_file(11);
+        Read_movement_file(11);
         //Generate_Movement_File(6);
         //StartCoroutine(Generate_Movement(5));
     }

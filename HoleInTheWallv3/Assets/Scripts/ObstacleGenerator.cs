@@ -23,7 +23,7 @@ public class ObstacleGenerator : MonoBehaviour
 
     private bool is_waiting = true;
     private float timer = 0;
-    private float wait_time = 5f;                                                     //wait until ragdoll is done with physics
+    private float wait_time = 7.5f;                                                 //wait until ragdoll is done with physics
     private float move_spd = .1f;
 
     // Start is called before the first frame update
